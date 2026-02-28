@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package temp;
+
+service TempConverter {
+  rpc ConvertTemperature (TempRequest) returns (TempResponse);
+}
+
+message TempRequest {
+  double value = 1;
+  string from = 2;
+}
+
+message TempResponse {
+  double result = 1;
+  string unit = 2;
+}

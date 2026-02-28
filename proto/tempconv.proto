@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package tempconv;
+
+option go_package = "github.com/MMohammadinia/tempconv/proto;proto";
+
+service TempConvService {
+  rpc CelsiusToFahrenheit (Temperature) returns (Temperature);
+  rpc FahrenheitToCelsius (Temperature) returns (Temperature);
+}
+
+message Temperature {
+  double value = 1;
+}

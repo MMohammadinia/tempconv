@@ -1,0 +1,18 @@
+﻿syntax = "proto3";
+
+package tempconv;
+
+option go_package = "tempconv/backend/server/pb";
+
+message TempRequest {
+  double value = 1;
+}
+
+message TempResponse {
+  double value = 1;
+}
+
+service TempConv {
+  rpc CelsiusToFahrenheit(TempRequest) returns (TempResponse);
+  rpc FahrenheitToCelsius(TempRequest) returns (TempResponse);
+}
