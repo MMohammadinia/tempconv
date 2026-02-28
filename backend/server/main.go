@@ -28,13 +28,12 @@ func (s *server) FahrenheitToCelsius(ctx context.Context, req *pb.TempRequest) (
 }
 
 func main() {
-	// Use Railway's PORT environment variable
+	// Use dynamic port for Railway
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "50051" // fallback for local dev
+		port = "50051" // fallback for local development
 	}
 
-	// gRPC server
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -44,13 +43,13 @@ func main() {
 	pb.RegisterTempConvServer(s, &server{})
 
 	go func() {
-		log.Printf("gRPC running on :%s", port)
+		log.Printf("gRPC running on port %s", port)
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)
 		}
 	}()
 
-	// Optional HTTP endpoint for testing
+	// Optional: simple HTTP endpoint on port 8080
 	http.HandleFunc("/celsius", func(w http.ResponseWriter, r *http.Request) {
 		value := r.URL.Query().Get("value")
 		var c float64
@@ -59,13 +58,6 @@ func main() {
 		fmt.Fprintf(w, "Fahrenheit: %.2f", f)
 	})
 
-	httpPort := os.Getenv("HTTP_PORT")
-	if httpPort == "" {
-		httpPort = "8080" // fallback for local dev
-	}
-
-	log.Printf("HTTP running on :%s", httpPort)
-	if err := http.ListenAndServe(":"+httpPort, nil); err != nil {
-		log.Fatalf("failed to start HTTP server: %v", err)
-	}
+	log.Println("HTTP running on :8080")
+	http.ListenAndServe(":8080", nil)
 }
