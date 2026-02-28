@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-// gRPC server implementation
 type server struct {
 	pb.UnimplementedTempConvServer
 }
@@ -28,7 +27,7 @@ func (s *server) FahrenheitToCelsius(ctx context.Context, req *pb.TempRequest) (
 }
 
 func main() {
-	// Start gRPC server
+	// gRPC server
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -38,13 +37,13 @@ func main() {
 	pb.RegisterTempConvServer(grpcServer, &server{})
 
 	go func() {
-		log.Println("gRPC running on :50051")
+		log.Println("gRPC server running on :50051")
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("failed to serve gRPC: %v", err)
 		}
 	}()
 
-	// Start HTTP server
+	// Simple HTTP endpoint for testing
 	http.HandleFunc("/celsius", func(w http.ResponseWriter, r *http.Request) {
 		value := r.URL.Query().Get("value")
 		var c float64
@@ -53,15 +52,7 @@ func main() {
 		fmt.Fprintf(w, "Fahrenheit: %.2f", f)
 	})
 
-	http.HandleFunc("/fahrenheit", func(w http.ResponseWriter, r *http.Request) {
-		value := r.URL.Query().Get("value")
-		var f float64
-		fmt.Sscanf(value, "%f", &f)
-		c := (f - 32) * 5 / 9
-		fmt.Fprintf(w, "Celsius: %.2f", c)
-	})
-
-	log.Println("HTTP running on :8080")
+	log.Println("HTTP server running on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("failed to serve HTTP: %v", err)
 	}
