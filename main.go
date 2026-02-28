@@ -6,13 +6,13 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 
 	pb "tempconv/backend/server/pb"
 
 	"google.golang.org/grpc"
 )
 
+// gRPC server implementation
 type server struct {
 	pb.UnimplementedTempConvServer
 }
@@ -28,28 +28,23 @@ func (s *server) FahrenheitToCelsius(ctx context.Context, req *pb.TempRequest) (
 }
 
 func main() {
-	// Use dynamic port for Railway
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "50051" // fallback for local development
-	}
-
-	lis, err := net.Listen("tcp", ":"+port)
+	// Start gRPC server
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
-	pb.RegisterTempConvServer(s, &server{})
+	grpcServer := grpc.NewServer()
+	pb.RegisterTempConvServer(grpcServer, &server{})
 
 	go func() {
-		log.Printf("gRPC running on port %s", port)
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
+		log.Println("gRPC running on :50051")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve gRPC: %v", err)
 		}
 	}()
 
-	// Optional: simple HTTP endpoint on port 8080
+	// Start HTTP server
 	http.HandleFunc("/celsius", func(w http.ResponseWriter, r *http.Request) {
 		value := r.URL.Query().Get("value")
 		var c float64
@@ -58,6 +53,16 @@ func main() {
 		fmt.Fprintf(w, "Fahrenheit: %.2f", f)
 	})
 
+	http.HandleFunc("/fahrenheit", func(w http.ResponseWriter, r *http.Request) {
+		value := r.URL.Query().Get("value")
+		var f float64
+		fmt.Sscanf(value, "%f", &f)
+		c := (f - 32) * 5 / 9
+		fmt.Fprintf(w, "Celsius: %.2f", c)
+	})
+
 	log.Println("HTTP running on :8080")
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatalf("failed to serve HTTP: %v", err)
+	}
 }
